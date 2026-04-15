@@ -1,0 +1,2046 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Same API, Different UI</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Press+Start+2P&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			/* ================================================================
+   GLOBAL RESET & VIEW SWITCHER
+   ================================================================ */
+			*,
+			*::before,
+			*::after {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+				min-height: 100vh;
+				transition: background 0.4s ease;
+			}
+
+			.view {
+				display: none;
+			}
+			.view.active {
+				display: block;
+			}
+
+			/* ── Top bar: the lesson banner + view tabs ── */
+			.lesson-bar {
+				background: #111;
+				color: #eee;
+				padding: 14px 24px 0;
+				position: sticky;
+				top: 0;
+				z-index: 9000;
+				border-bottom: 1px solid #333;
+			}
+
+			.lesson-bar h2 {
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.82rem;
+				font-weight: 500;
+				letter-spacing: 0.03em;
+				margin-bottom: 4px;
+				color: #aaa;
+			}
+
+			.lesson-bar p {
+				font-size: 0.78rem;
+				color: #666;
+				margin-bottom: 12px;
+				font-family: "IBM Plex Mono", monospace;
+			}
+
+			.lesson-bar p code {
+				background: #222;
+				padding: 1px 5px;
+				border-radius: 3px;
+				color: #9be39b;
+				font-size: 0.75rem;
+			}
+
+			.view-tabs {
+				display: flex;
+				gap: 0;
+			}
+
+			.view-tab {
+				padding: 10px 24px;
+				background: none;
+				border: none;
+				color: #777;
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.78rem;
+				font-weight: 500;
+				cursor: pointer;
+				border-bottom: 2px solid transparent;
+				transition: all 0.2s ease;
+				letter-spacing: 0.02em;
+			}
+
+			.view-tab:hover {
+				color: #ccc;
+			}
+
+			.view-tab.active {
+				color: #fff;
+				border-bottom-color: #fff;
+			}
+
+			.view-tab .tab-dot {
+				display: inline-block;
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				margin-right: 8px;
+				vertical-align: middle;
+			}
+
+			.view-tab:nth-child(1) .tab-dot {
+				background: #e8c17a;
+			}
+			.view-tab:nth-child(2) .tab-dot {
+				background: #4ae44a;
+			}
+			.view-tab:nth-child(3) .tab-dot {
+				background: #7ab8e8;
+			}
+
+			/* ================================================================
+   VIEW 1: MINIMAL — editorial, warm paper, serif headings
+   ================================================================ */
+			body.theme-minimal {
+				background: #f6f3ed;
+			}
+
+			#view-minimal {
+				font-family: "IBM Plex Sans", sans-serif;
+				color: #1a1a1a;
+			}
+
+			#view-minimal .v-layout {
+				max-width: 1040px;
+				margin: 0 auto;
+				padding: 40px 24px 80px;
+			}
+
+			#view-minimal .v-header {
+				border-bottom: 2px solid #1a1a1a;
+				padding-bottom: 12px;
+				margin-bottom: 8px;
+			}
+
+			#view-minimal .v-header h1 {
+				font-family: "DM Serif Display", Georgia, serif;
+				font-size: 2.6rem;
+				font-weight: 400;
+				letter-spacing: -0.5px;
+			}
+
+			#view-minimal .v-subheader {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 8px 0 28px;
+				border-bottom: 1px solid #ddd8cd;
+				margin-bottom: 28px;
+			}
+
+			#view-minimal .v-dateline {
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.72rem;
+				color: #8a8a8a;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+			}
+
+			#view-minimal .v-stats {
+				display: flex;
+				gap: 18px;
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.72rem;
+				color: #8a8a8a;
+			}
+
+			#view-minimal .v-stats strong {
+				color: #1a1a1a;
+				font-weight: 600;
+			}
+
+			#view-minimal .v-grid {
+				display: grid;
+				grid-template-columns: 320px 1fr;
+				gap: 40px;
+				align-items: start;
+			}
+
+			/* Sidebar form */
+			#view-minimal .v-sidebar {
+				position: sticky;
+				top: 80px;
+			}
+
+			#view-minimal .v-form-card {
+				background: #fdfcfa;
+				border: 1px solid #ddd8cd;
+				padding: 24px;
+			}
+
+			#view-minimal .v-form-title {
+				font-family: "DM Serif Display", serif;
+				font-size: 1.2rem;
+				margin-bottom: 18px;
+				padding-bottom: 10px;
+				border-bottom: 1px solid #ece8df;
+			}
+
+			#view-minimal label {
+				display: block;
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.68rem;
+				font-weight: 500;
+				text-transform: uppercase;
+				letter-spacing: 0.1em;
+				color: #8a8a8a;
+				margin-bottom: 5px;
+			}
+
+			#view-minimal .v-form-group {
+				margin-bottom: 14px;
+			}
+
+			#view-minimal textarea,
+			#view-minimal select {
+				width: 100%;
+				padding: 9px 11px;
+				border: 1px solid #ddd8cd;
+				border-radius: 2px;
+				font-family: "IBM Plex Sans", sans-serif;
+				font-size: 0.88rem;
+				color: #1a1a1a;
+				background: #f6f3ed;
+				transition: border-color 0.15s;
+				-webkit-appearance: none;
+				appearance: none;
+			}
+
+			#view-minimal textarea {
+				resize: vertical;
+				min-height: 68px;
+				line-height: 1.5;
+			}
+			#view-minimal select {
+				cursor: pointer;
+				background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 4l3 3 3-3' fill='none' stroke='%238a8a8a' stroke-width='1.5'/%3E%3C/svg%3E");
+				background-repeat: no-repeat;
+				background-position: right 10px center;
+				padding-right: 28px;
+			}
+
+			#view-minimal textarea:focus,
+			#view-minimal select:focus {
+				outline: none;
+				border-color: #4a4a4a;
+				background: #fdfcfa;
+			}
+
+			#view-minimal .v-form-row {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+			}
+
+			#view-minimal .v-btn-submit {
+				width: 100%;
+				padding: 10px;
+				background: #1a1a1a;
+				color: #f6f3ed;
+				border: none;
+				border-radius: 2px;
+				font-family: "IBM Plex Sans", sans-serif;
+				font-size: 0.84rem;
+				font-weight: 600;
+				cursor: pointer;
+				transition: background 0.15s;
+			}
+
+			#view-minimal .v-btn-submit:hover {
+				background: #4a4a4a;
+			}
+
+			#view-minimal .v-btn-cancel {
+				width: 100%;
+				padding: 8px;
+				background: none;
+				border: 1px solid #ddd8cd;
+				border-radius: 2px;
+				font-size: 0.8rem;
+				color: #8a8a8a;
+				cursor: pointer;
+				margin-top: 6px;
+				transition: all 0.15s;
+			}
+
+			#view-minimal .v-btn-cancel:hover {
+				border-color: #8a8a8a;
+				color: #4a4a4a;
+			}
+
+			/* Controls */
+			#view-minimal .v-controls {
+				display: flex;
+				gap: 10px;
+				margin-bottom: 18px;
+				flex-wrap: wrap;
+				align-items: center;
+			}
+
+			#view-minimal .v-search {
+				flex: 1;
+				min-width: 160px;
+				padding: 8px 10px;
+				border: 1px solid #ddd8cd;
+				border-radius: 2px;
+				font-family: "IBM Plex Sans", sans-serif;
+				font-size: 0.84rem;
+				background: #fdfcfa;
+				color: #1a1a1a;
+			}
+
+			#view-minimal .v-search:focus {
+				outline: none;
+				border-color: #4a4a4a;
+			}
+
+			#view-minimal .v-filter-group {
+				display: flex;
+				gap: 1px;
+				background: #ddd8cd;
+				border-radius: 2px;
+				padding: 2px;
+			}
+
+			#view-minimal .v-filter-btn {
+				padding: 5px 11px;
+				border: none;
+				background: none;
+				font-family: "IBM Plex Sans", sans-serif;
+				font-size: 0.76rem;
+				font-weight: 500;
+				color: #8a8a8a;
+				cursor: pointer;
+				border-radius: 1px;
+				transition: all 0.15s;
+			}
+
+			#view-minimal .v-filter-btn:hover {
+				color: #4a4a4a;
+			}
+			#view-minimal .v-filter-btn.active {
+				background: #fdfcfa;
+				color: #1a1a1a;
+				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+			}
+
+			/* Task list */
+			#view-minimal .v-task-list {
+				display: flex;
+				flex-direction: column;
+				gap: 1px;
+				background: #ddd8cd;
+				border: 1px solid #ddd8cd;
+			}
+
+			#view-minimal .v-task-item {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				padding: 12px 14px;
+				background: #fdfcfa;
+				transition: background 0.12s;
+				border-left: 3px solid transparent;
+			}
+
+			#view-minimal .v-task-item:hover {
+				background: #f6f3ed;
+			}
+			#view-minimal .v-task-item.completed {
+				background: #f6f3ed;
+			}
+			#view-minimal .v-task-item.completed .v-task-desc {
+				text-decoration: line-through;
+				color: #8a8a8a;
+			}
+			#view-minimal .v-task-item.cat-work {
+				border-left-color: #2d5a8e;
+			}
+			#view-minimal .v-task-item.cat-personal {
+				border-left-color: #7a4b8a;
+			}
+			#view-minimal .v-task-item.cat-shopping {
+				border-left-color: #b8860b;
+			}
+
+			#view-minimal .v-checkbox {
+				-webkit-appearance: none;
+				appearance: none;
+				width: 16px;
+				height: 16px;
+				min-width: 16px;
+				border: 1.5px solid #ddd8cd;
+				border-radius: 2px;
+				cursor: pointer;
+				position: relative;
+				background: #fdfcfa;
+				transition: all 0.15s;
+			}
+
+			#view-minimal .v-checkbox:hover {
+				border-color: #8a8a8a;
+			}
+			#view-minimal .v-checkbox:checked {
+				background: #1a1a1a;
+				border-color: #1a1a1a;
+			}
+			#view-minimal .v-checkbox:checked::after {
+				content: "";
+				position: absolute;
+				left: 4px;
+				top: 1px;
+				width: 5px;
+				height: 8px;
+				border: solid #fdfcfa;
+				border-width: 0 1.5px 1.5px 0;
+				transform: rotate(45deg);
+			}
+
+			#view-minimal .v-task-content {
+				flex: 1;
+				min-width: 0;
+			}
+			#view-minimal .v-task-desc {
+				font-size: 0.88rem;
+				font-weight: 450;
+				line-height: 1.4;
+				margin-bottom: 2px;
+				word-break: break-word;
+			}
+
+			#view-minimal .v-tag {
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.62rem;
+				font-weight: 500;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				padding: 2px 6px;
+				border-radius: 2px;
+			}
+
+			#view-minimal .v-tag-work {
+				background: rgba(45, 90, 142, 0.1);
+				color: #2d5a8e;
+			}
+			#view-minimal .v-tag-personal {
+				background: rgba(122, 75, 138, 0.1);
+				color: #7a4b8a;
+			}
+			#view-minimal .v-tag-shopping {
+				background: rgba(184, 134, 11, 0.1);
+				color: #b8860b;
+			}
+
+			#view-minimal .v-task-actions {
+				display: flex;
+				gap: 2px;
+				opacity: 0;
+				transition: opacity 0.15s;
+			}
+			#view-minimal .v-task-item:hover .v-task-actions {
+				opacity: 1;
+			}
+
+			#view-minimal .v-act-btn {
+				width: 26px;
+				height: 26px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border: none;
+				background: none;
+				cursor: pointer;
+				border-radius: 2px;
+				color: #8a8a8a;
+				transition: all 0.12s;
+			}
+
+			#view-minimal .v-act-btn:hover {
+				background: #ece8df;
+				color: #1a1a1a;
+			}
+			#view-minimal .v-act-btn.del:hover {
+				background: rgba(179, 58, 58, 0.1);
+				color: #b33a3a;
+			}
+
+			#view-minimal .v-empty {
+				padding: 48px 20px;
+				text-align: center;
+				background: #fdfcfa;
+			}
+
+			#view-minimal .v-empty-title {
+				font-family: "DM Serif Display", serif;
+				font-size: 1.05rem;
+				color: #4a4a4a;
+				margin-bottom: 4px;
+			}
+
+			#view-minimal .v-empty p {
+				font-size: 0.8rem;
+				color: #8a8a8a;
+			}
+
+			#view-minimal .v-loading {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 48px;
+				background: #fdfcfa;
+				gap: 10px;
+				color: #8a8a8a;
+				font-size: 0.84rem;
+			}
+
+			@media (max-width: 800px) {
+				#view-minimal .v-grid {
+					grid-template-columns: 1fr;
+					gap: 24px;
+				}
+				#view-minimal .v-sidebar {
+					position: static;
+				}
+				#view-minimal .v-task-actions {
+					opacity: 1;
+				}
+				#view-minimal .v-controls {
+					flex-direction: column;
+					align-items: stretch;
+				}
+			}
+
+			/* ================================================================
+   VIEW 2: TERMINAL — green-on-black CRT aesthetic
+   ================================================================ */
+			body.theme-terminal {
+				background: #0a0a0a;
+			}
+
+			#view-terminal {
+				font-family: "IBM Plex Mono", monospace;
+				color: #33ff33;
+				padding: 24px;
+				max-width: 860px;
+				margin: 0 auto;
+			}
+
+			#view-terminal .t-header {
+				margin-bottom: 20px;
+				padding-bottom: 12px;
+				border-bottom: 1px solid #1a3a1a;
+			}
+
+			#view-terminal .t-header pre {
+				font-size: 0.72rem;
+				line-height: 1.4;
+				color: #33ff33;
+				opacity: 0.7;
+			}
+
+			#view-terminal .t-prompt {
+				font-size: 0.8rem;
+				color: #33ff33;
+				margin-bottom: 4px;
+			}
+
+			#view-terminal .t-prompt .path {
+				color: #66aaff;
+			}
+			#view-terminal .t-prompt .arrow {
+				color: #ff6666;
+			}
+
+			#view-terminal .t-stats {
+				font-size: 0.72rem;
+				color: #22aa22;
+				margin-bottom: 20px;
+				padding: 8px 12px;
+				background: #0d1a0d;
+				border: 1px solid #1a3a1a;
+				display: flex;
+				gap: 20px;
+			}
+
+			#view-terminal .t-stats .num {
+				color: #33ff33;
+				font-weight: 600;
+			}
+
+			/* Form */
+			#view-terminal .t-form {
+				background: #0d1a0d;
+				border: 1px solid #1a3a1a;
+				padding: 16px;
+				margin-bottom: 20px;
+			}
+
+			#view-terminal .t-form-title {
+				font-size: 0.72rem;
+				color: #22aa22;
+				margin-bottom: 12px;
+				text-transform: uppercase;
+				letter-spacing: 0.15em;
+			}
+
+			#view-terminal .t-form-group {
+				margin-bottom: 10px;
+			}
+
+			#view-terminal .t-label {
+				font-size: 0.7rem;
+				color: #22aa22;
+				margin-bottom: 3px;
+				display: block;
+			}
+
+			#view-terminal textarea,
+			#view-terminal select {
+				width: 100%;
+				padding: 8px 10px;
+				background: #050505;
+				border: 1px solid #1a3a1a;
+				color: #33ff33;
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.82rem;
+				border-radius: 0;
+				-webkit-appearance: none;
+				appearance: none;
+			}
+
+			#view-terminal textarea {
+				resize: vertical;
+				min-height: 56px;
+			}
+
+			#view-terminal textarea:focus,
+			#view-terminal select:focus {
+				outline: none;
+				border-color: #33ff33;
+			}
+
+			#view-terminal select {
+				cursor: pointer;
+				background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 4l3 3 3-3' fill='none' stroke='%2333ff33' stroke-width='1.5'/%3E%3C/svg%3E");
+				background-repeat: no-repeat;
+				background-position: right 8px center;
+				padding-right: 24px;
+			}
+
+			#view-terminal .t-form-row {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+			}
+
+			#view-terminal .t-btn-submit {
+				width: 100%;
+				padding: 9px;
+				background: #1a3a1a;
+				color: #33ff33;
+				border: 1px solid #33ff33;
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.78rem;
+				font-weight: 600;
+				cursor: pointer;
+				text-transform: uppercase;
+				letter-spacing: 0.1em;
+				transition: all 0.15s;
+			}
+
+			#view-terminal .t-btn-submit:hover {
+				background: #33ff33;
+				color: #0a0a0a;
+			}
+
+			#view-terminal .t-btn-cancel {
+				width: 100%;
+				padding: 7px;
+				background: none;
+				color: #ff6666;
+				border: 1px solid #3a1a1a;
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.72rem;
+				cursor: pointer;
+				margin-top: 6px;
+				transition: all 0.15s;
+			}
+
+			#view-terminal .t-btn-cancel:hover {
+				border-color: #ff6666;
+			}
+
+			/* Controls */
+			#view-terminal .t-controls {
+				display: flex;
+				gap: 8px;
+				margin-bottom: 14px;
+				flex-wrap: wrap;
+				align-items: center;
+			}
+
+			#view-terminal .t-search {
+				flex: 1;
+				min-width: 140px;
+				padding: 7px 10px;
+				background: #050505;
+				border: 1px solid #1a3a1a;
+				color: #33ff33;
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.78rem;
+			}
+
+			#view-terminal .t-search::placeholder {
+				color: #1a5a1a;
+			}
+			#view-terminal .t-search:focus {
+				outline: none;
+				border-color: #33ff33;
+			}
+
+			#view-terminal .t-filter-group {
+				display: flex;
+				gap: 0;
+			}
+
+			#view-terminal .t-filter-btn {
+				padding: 6px 10px;
+				border: 1px solid #1a3a1a;
+				background: none;
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.7rem;
+				color: #22aa22;
+				cursor: pointer;
+				transition: all 0.12s;
+				margin-left: -1px;
+			}
+
+			#view-terminal .t-filter-btn:first-child {
+				margin-left: 0;
+			}
+			#view-terminal .t-filter-btn:hover {
+				border-color: #33ff33;
+			}
+			#view-terminal .t-filter-btn.active {
+				background: #1a3a1a;
+				color: #33ff33;
+				border-color: #33ff33;
+			}
+
+			/* Task list */
+			#view-terminal .t-task-list {
+				border: 1px solid #1a3a1a;
+			}
+
+			#view-terminal .t-task-item {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 10px 12px;
+				border-bottom: 1px solid #1a3a1a;
+				font-size: 0.82rem;
+				transition: background 0.1s;
+			}
+
+			#view-terminal .t-task-item:last-child {
+				border-bottom: none;
+			}
+			#view-terminal .t-task-item:hover {
+				background: #0d1a0d;
+			}
+
+			#view-terminal .t-task-item.completed {
+				opacity: 0.4;
+			}
+			#view-terminal .t-task-item.completed .t-task-desc {
+				text-decoration: line-through;
+			}
+
+			#view-terminal .t-checkbox {
+				-webkit-appearance: none;
+				appearance: none;
+				width: 14px;
+				height: 14px;
+				min-width: 14px;
+				border: 1px solid #33ff33;
+				cursor: pointer;
+				position: relative;
+				background: none;
+			}
+
+			#view-terminal .t-checkbox:checked {
+				background: #33ff33;
+			}
+			#view-terminal .t-checkbox:checked::after {
+				content: "";
+				position: absolute;
+				left: 3px;
+				top: 0px;
+				width: 4px;
+				height: 8px;
+				border: solid #0a0a0a;
+				border-width: 0 2px 2px 0;
+				transform: rotate(45deg);
+			}
+
+			#view-terminal .t-task-content {
+				flex: 1;
+				min-width: 0;
+			}
+			#view-terminal .t-task-desc {
+				margin-bottom: 2px;
+				word-break: break-word;
+			}
+
+			#view-terminal .t-task-cat {
+				font-size: 0.62rem;
+				text-transform: uppercase;
+				letter-spacing: 0.1em;
+			}
+
+			#view-terminal .t-cat-work {
+				color: #66aaff;
+			}
+			#view-terminal .t-cat-personal {
+				color: #cc77ff;
+			}
+			#view-terminal .t-cat-shopping {
+				color: #ffaa33;
+			}
+
+			#view-terminal .t-task-actions {
+				display: flex;
+				gap: 4px;
+			}
+
+			#view-terminal .t-act-btn {
+				padding: 3px 8px;
+				border: 1px solid #1a3a1a;
+				background: none;
+				color: #22aa22;
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.65rem;
+				cursor: pointer;
+				transition: all 0.12s;
+			}
+
+			#view-terminal .t-act-btn:hover {
+				border-color: #33ff33;
+				color: #33ff33;
+			}
+			#view-terminal .t-act-btn.del:hover {
+				border-color: #ff6666;
+				color: #ff6666;
+			}
+
+			#view-terminal .t-empty,
+			#view-terminal .t-loading {
+				padding: 36px;
+				text-align: center;
+				font-size: 0.78rem;
+				color: #22aa22;
+				border: 1px solid #1a3a1a;
+			}
+
+			/* Scanline effect */
+			#view-terminal::after {
+				content: "";
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: repeating-linear-gradient(
+					0deg,
+					transparent,
+					transparent 2px,
+					rgba(0, 0, 0, 0.08) 2px,
+					rgba(0, 0, 0, 0.08) 4px
+				);
+				pointer-events: none;
+				z-index: 50;
+			}
+
+			/* ================================================================
+   VIEW 3: RETRO OS — Windows 95 / classic desktop
+   ================================================================ */
+			body.theme-retro {
+				background: #008080;
+			}
+
+			#view-retro {
+				padding: 24px;
+				max-width: 920px;
+				margin: 0 auto;
+				font-family: "IBM Plex Sans", sans-serif;
+			}
+
+			#view-retro .r-window {
+				background: #c0c0c0;
+				border-top: 2px solid #fff;
+				border-left: 2px solid #fff;
+				border-right: 2px solid #404040;
+				border-bottom: 2px solid #404040;
+				box-shadow: 1px 1px 0 #000;
+			}
+
+			#view-retro .r-titlebar {
+				background: linear-gradient(90deg, #000080, #1084d0);
+				color: white;
+				padding: 3px 4px;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				font-size: 0.82rem;
+				font-weight: 600;
+				user-select: none;
+			}
+
+			#view-retro .r-titlebar-text {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+			}
+
+			#view-retro .r-titlebar-icon {
+				width: 16px;
+				height: 16px;
+				background: #c0c0c0;
+				border: 1px solid #808080;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 0.6rem;
+				color: #000080;
+				font-weight: 700;
+			}
+
+			#view-retro .r-win-btns {
+				display: flex;
+				gap: 2px;
+			}
+
+			#view-retro .r-win-btn {
+				width: 16px;
+				height: 14px;
+				background: #c0c0c0;
+				border-top: 1px solid #fff;
+				border-left: 1px solid #fff;
+				border-right: 1px solid #404040;
+				border-bottom: 1px solid #404040;
+				font-size: 0.6rem;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				cursor: pointer;
+				color: #000;
+				font-weight: 700;
+				font-family: "IBM Plex Sans", sans-serif;
+			}
+
+			#view-retro .r-menubar {
+				padding: 2px 4px;
+				display: flex;
+				gap: 0;
+				border-bottom: 1px solid #808080;
+			}
+
+			#view-retro .r-menu-item {
+				padding: 2px 8px;
+				font-size: 0.78rem;
+				cursor: pointer;
+				color: #000;
+				border: none;
+				background: none;
+				font-family: "IBM Plex Sans", sans-serif;
+			}
+
+			#view-retro .r-menu-item:hover {
+				background: #000080;
+				color: #fff;
+			}
+
+			#view-retro .r-body {
+				padding: 8px;
+			}
+
+			#view-retro .r-grid {
+				display: grid;
+				grid-template-columns: 280px 1fr;
+				gap: 8px;
+			}
+
+			/* Inset panel */
+			.r-inset {
+				border-top: 1px solid #808080;
+				border-left: 1px solid #808080;
+				border-right: 1px solid #fff;
+				border-bottom: 1px solid #fff;
+				background: #fff;
+				padding: 10px;
+			}
+
+			#view-retro .r-section-title {
+				font-size: 0.78rem;
+				font-weight: 600;
+				color: #000;
+				margin-bottom: 8px;
+				padding-bottom: 4px;
+				border-bottom: 1px solid #c0c0c0;
+			}
+
+			#view-retro .r-form-group {
+				margin-bottom: 8px;
+			}
+
+			#view-retro .r-label {
+				display: block;
+				font-size: 0.75rem;
+				color: #000;
+				margin-bottom: 3px;
+			}
+
+			#view-retro textarea,
+			#view-retro select {
+				width: 100%;
+				padding: 4px 6px;
+				border-top: 1px solid #808080;
+				border-left: 1px solid #808080;
+				border-right: 1px solid #fff;
+				border-bottom: 1px solid #fff;
+				font-family: "IBM Plex Sans", sans-serif;
+				font-size: 0.82rem;
+				color: #000;
+				background: #fff;
+				border-radius: 0;
+				-webkit-appearance: none;
+				appearance: none;
+			}
+
+			#view-retro textarea {
+				resize: vertical;
+				min-height: 56px;
+			}
+			#view-retro textarea:focus,
+			#view-retro select:focus {
+				outline: 1px dotted #000;
+			}
+
+			#view-retro select {
+				cursor: pointer;
+				background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath d='M1 3l3 3 3-3' fill='%23000' stroke='%23000' stroke-width='0.5'/%3E%3C/svg%3E");
+				background-repeat: no-repeat;
+				background-position: right 6px center;
+				padding-right: 20px;
+			}
+
+			#view-retro .r-form-row {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 8px;
+			}
+
+			#view-retro .r-btn {
+				padding: 4px 16px;
+				background: #c0c0c0;
+				border-top: 2px solid #fff;
+				border-left: 2px solid #fff;
+				border-right: 2px solid #404040;
+				border-bottom: 2px solid #404040;
+				font-family: "IBM Plex Sans", sans-serif;
+				font-size: 0.78rem;
+				cursor: pointer;
+				color: #000;
+				width: 100%;
+				transition: none;
+			}
+
+			#view-retro .r-btn:active {
+				border-top: 2px solid #404040;
+				border-left: 2px solid #404040;
+				border-right: 2px solid #fff;
+				border-bottom: 2px solid #fff;
+			}
+
+			#view-retro .r-btn-cancel {
+				padding: 3px 12px;
+				background: #c0c0c0;
+				border-top: 1px solid #fff;
+				border-left: 1px solid #fff;
+				border-right: 1px solid #404040;
+				border-bottom: 1px solid #404040;
+				font-family: "IBM Plex Sans", sans-serif;
+				font-size: 0.72rem;
+				cursor: pointer;
+				color: #000;
+				width: 100%;
+				margin-top: 4px;
+			}
+
+			/* Stats */
+			#view-retro .r-stats {
+				display: flex;
+				gap: 12px;
+				margin-bottom: 8px;
+				font-size: 0.75rem;
+			}
+
+			#view-retro .r-stat-box {
+				flex: 1;
+				text-align: center;
+				padding: 6px;
+				border-top: 1px solid #808080;
+				border-left: 1px solid #808080;
+				border-right: 1px solid #fff;
+				border-bottom: 1px solid #fff;
+				background: #fff;
+			}
+
+			#view-retro .r-stat-num {
+				font-weight: 700;
+				font-size: 1.1rem;
+				color: #000080;
+			}
+			#view-retro .r-stat-label {
+				font-size: 0.68rem;
+				color: #808080;
+			}
+
+			/* Controls */
+			#view-retro .r-controls {
+				display: flex;
+				gap: 4px;
+				margin-bottom: 8px;
+				flex-wrap: wrap;
+				align-items: center;
+			}
+
+			#view-retro .r-search {
+				flex: 1;
+				min-width: 120px;
+				padding: 4px 6px;
+				border-top: 1px solid #808080;
+				border-left: 1px solid #808080;
+				border-right: 1px solid #fff;
+				border-bottom: 1px solid #fff;
+				font-family: "IBM Plex Sans", sans-serif;
+				font-size: 0.78rem;
+				background: #fff;
+			}
+
+			#view-retro .r-search:focus {
+				outline: 1px dotted #000;
+			}
+
+			#view-retro .r-filter-group {
+				display: flex;
+				gap: 2px;
+			}
+
+			#view-retro .r-filter-btn {
+				padding: 3px 8px;
+				background: #c0c0c0;
+				border-top: 1px solid #fff;
+				border-left: 1px solid #fff;
+				border-right: 1px solid #404040;
+				border-bottom: 1px solid #404040;
+				font-family: "IBM Plex Sans", sans-serif;
+				font-size: 0.7rem;
+				cursor: pointer;
+				color: #000;
+			}
+
+			#view-retro .r-filter-btn.active {
+				background: #000080;
+				color: #fff;
+				border-color: #000080;
+			}
+
+			/* Task list */
+			#view-retro .r-task-list {
+				border-top: 1px solid #808080;
+				border-left: 1px solid #808080;
+				border-right: 1px solid #fff;
+				border-bottom: 1px solid #fff;
+				background: #fff;
+				max-height: 420px;
+				overflow-y: auto;
+			}
+
+			#view-retro .r-task-item {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding: 6px 8px;
+				border-bottom: 1px solid #c0c0c0;
+				font-size: 0.8rem;
+				cursor: default;
+			}
+
+			#view-retro .r-task-item:hover {
+				background: #000080;
+				color: #fff;
+			}
+			#view-retro .r-task-item:hover .r-task-cat {
+				color: #aaccff;
+			}
+			#view-retro .r-task-item:hover .r-act-btn {
+				color: #fff;
+				border-color: #fff;
+			}
+
+			#view-retro .r-task-item.completed {
+				color: #808080;
+			}
+			#view-retro .r-task-item.completed .r-task-desc {
+				text-decoration: line-through;
+			}
+
+			#view-retro .r-checkbox {
+				-webkit-appearance: none;
+				appearance: none;
+				width: 13px;
+				height: 13px;
+				min-width: 13px;
+				border-top: 1px solid #808080;
+				border-left: 1px solid #808080;
+				border-right: 1px solid #fff;
+				border-bottom: 1px solid #fff;
+				background: #fff;
+				cursor: pointer;
+				position: relative;
+			}
+
+			#view-retro .r-checkbox:checked::after {
+				content: "\2713";
+				position: absolute;
+				left: 1px;
+				top: -2px;
+				font-size: 0.7rem;
+				font-weight: 700;
+				color: #000;
+			}
+
+			#view-retro .r-task-content {
+				flex: 1;
+				min-width: 0;
+			}
+			#view-retro .r-task-desc {
+				word-break: break-word;
+			}
+
+			#view-retro .r-task-cat {
+				font-size: 0.65rem;
+				color: #808080;
+			}
+
+			#view-retro .r-task-actions {
+				display: flex;
+				gap: 2px;
+			}
+
+			#view-retro .r-act-btn {
+				padding: 1px 6px;
+				border: 1px solid #808080;
+				background: none;
+				font-family: "IBM Plex Sans", sans-serif;
+				font-size: 0.65rem;
+				cursor: pointer;
+				color: #808080;
+			}
+
+			#view-retro .r-task-item:hover .r-act-btn:hover {
+				background: rgba(255, 255, 255, 0.2);
+			}
+
+			#view-retro .r-empty,
+			#view-retro .r-loading {
+				padding: 32px;
+				text-align: center;
+				font-size: 0.78rem;
+				color: #808080;
+				border-top: 1px solid #808080;
+				border-left: 1px solid #808080;
+				border-right: 1px solid #fff;
+				border-bottom: 1px solid #fff;
+				background: #fff;
+			}
+
+			/* Status bar */
+			#view-retro .r-statusbar {
+				display: flex;
+				padding: 3px 4px;
+				gap: 4px;
+				border-top: 1px solid #808080;
+			}
+
+			#view-retro .r-status-cell {
+				font-size: 0.7rem;
+				padding: 1px 6px;
+				border-top: 1px solid #808080;
+				border-left: 1px solid #808080;
+				border-right: 1px solid #fff;
+				border-bottom: 1px solid #fff;
+				color: #000;
+				flex: 1;
+			}
+
+			@media (max-width: 700px) {
+				#view-retro .r-grid {
+					grid-template-columns: 1fr;
+				}
+			}
+
+			/* ================================================================
+   SHARED: Spinner, Toast
+   ================================================================ */
+			.g-spinner {
+				width: 16px;
+				height: 16px;
+				border: 2px solid #ccc;
+				border-top-color: #888;
+				border-radius: 50%;
+				animation: g-spin 0.8s linear infinite;
+				display: inline-block;
+			}
+
+			body.theme-terminal .g-spinner {
+				border-color: #1a3a1a;
+				border-top-color: #33ff33;
+			}
+
+			@keyframes g-spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+
+			.g-toast {
+				position: fixed;
+				bottom: 24px;
+				right: 24px;
+				padding: 10px 16px;
+				border-radius: 2px;
+				font-size: 0.8rem;
+				font-weight: 500;
+				z-index: 10000;
+				animation: g-toast-in 0.2s ease-out;
+				max-width: 300px;
+				font-family: "IBM Plex Sans", sans-serif;
+			}
+
+			body.theme-minimal .g-toast {
+				background: #1a1a1a;
+				color: #f6f3ed;
+			}
+			body.theme-minimal .g-toast.error {
+				background: #b33a3a;
+				color: #fff;
+			}
+			body.theme-minimal .g-toast.success {
+				background: #3a7d44;
+				color: #fff;
+			}
+
+			body.theme-terminal .g-toast {
+				background: #1a3a1a;
+				color: #33ff33;
+				border: 1px solid #33ff33;
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 0.75rem;
+			}
+			body.theme-terminal .g-toast.error {
+				border-color: #ff6666;
+				color: #ff6666;
+			}
+			body.theme-terminal .g-toast.success {
+				border-color: #33ff33;
+			}
+
+			body.theme-retro .g-toast {
+				background: #c0c0c0;
+				color: #000;
+				border-top: 2px solid #fff;
+				border-left: 2px solid #fff;
+				border-right: 2px solid #404040;
+				border-bottom: 2px solid #404040;
+				box-shadow: 2px 2px 0 #000;
+				font-size: 0.78rem;
+			}
+			body.theme-retro .g-toast.error {
+				background: #c0c0c0;
+				color: #cc0000;
+			}
+			body.theme-retro .g-toast.success {
+				background: #c0c0c0;
+				color: #006600;
+			}
+
+			@keyframes g-toast-in {
+				from {
+					opacity: 0;
+					transform: translateY(8px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+		</style>
+	</head>
+	<body class="theme-minimal">
+		<!-- ── Lesson bar ── -->
+		<div class="lesson-bar">
+			<h2>Lesson: Same API, Different UI</h2>
+			<p>
+				All three views below hit <code>GET /tasks</code>, <code>POST /tasks</code>, <code>PUT /tasks/:id</code>,
+				<code>DELETE /tasks/:id</code> &mdash; same endpoints, same data.
+			</p>
+			<div class="view-tabs">
+				<button class="view-tab active" data-view="minimal"><span class="tab-dot"></span>Minimal</button>
+				<button class="view-tab" data-view="terminal"><span class="tab-dot"></span>Terminal</button>
+				<button class="view-tab" data-view="retro"><span class="tab-dot"></span>Retro OS</button>
+			</div>
+		</div>
+
+		<!-- ================================================================
+     VIEW 1: MINIMAL
+     ================================================================ -->
+		<div id="view-minimal" class="view active">
+			<div class="v-layout">
+				<div class="v-header"><h1>Tasks</h1></div>
+				<div class="v-subheader">
+					<span class="v-dateline" id="m-dateline"></span>
+					<div class="v-stats">
+						<span><strong id="m-total">0</strong> total</span>
+						<span><strong id="m-done">0</strong> done</span>
+						<span><strong id="m-pending">0</strong> pending</span>
+					</div>
+				</div>
+				<div class="v-grid">
+					<div class="v-sidebar">
+						<div class="v-form-card">
+							<div class="v-form-title" id="m-form-title">New Task</div>
+							<form id="m-form">
+								<div class="v-form-group">
+									<label>Description</label>
+									<textarea id="m-desc" placeholder="What needs to be done?" required></textarea>
+								</div>
+								<div class="v-form-row">
+									<div class="v-form-group">
+										<label>Category</label
+										><select id="m-cat" required>
+											<option value="">Choose...</option>
+											<option value="work">Work</option>
+											<option value="personal">Personal</option>
+											<option value="shopping">Shopping</option>
+										</select>
+									</div>
+									<div class="v-form-group">
+										<label>Status</label
+										><select id="m-status">
+											<option value="false">Pending</option>
+											<option value="true">Completed</option>
+										</select>
+									</div>
+								</div>
+								<button type="submit" class="v-btn-submit" id="m-submit-text">Add Task</button>
+								<button type="button" class="v-btn-cancel" id="m-cancel" style="display: none">Cancel</button>
+							</form>
+						</div>
+					</div>
+					<div>
+						<div class="v-controls">
+							<input type="text" class="v-search" id="m-search" placeholder="Search tasks..." />
+							<div class="v-filter-group" id="m-filters">
+								<button class="v-filter-btn active" data-filter="all">All</button>
+								<button class="v-filter-btn" data-filter="completed">Done</button>
+								<button class="v-filter-btn" data-filter="pending">Pending</button>
+							</div>
+							<div class="v-filter-group" id="m-cats">
+								<button class="v-filter-btn active" data-category="all">All</button>
+								<button class="v-filter-btn" data-category="work">Work</button>
+								<button class="v-filter-btn" data-category="personal">Personal</button>
+								<button class="v-filter-btn" data-category="shopping">Shopping</button>
+							</div>
+						</div>
+						<div id="m-list" class="v-task-list">
+							<div class="v-empty">
+								<div class="v-empty-title">No tasks yet</div>
+								<p>Create your first task</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- ================================================================
+     VIEW 2: TERMINAL
+     ================================================================ -->
+		<div id="view-terminal" class="view">
+			<div class="t-header">
+				<pre>
+  _____         _      __  __
+ |_   _|_ _ ___| | __ |  \/  | __ _ _ __
+   | |/ _` / __| |/ / | |\/| |/ _` | '__|
+   | | (_| \__ \   <  | |  | | (_| | |
+   |_|\__,_|___/_|\_\ |_|  |_|\__, |_|
+                               |___/
+</pre
+				>
+			</div>
+			<div class="t-prompt"><span class="path">~/tasks</span> <span class="arrow">&gt;</span> status</div>
+			<div class="t-stats">
+				<span><span class="num" id="t-total">0</span> total</span>
+				<span><span class="num" id="t-done">0</span> done</span>
+				<span><span class="num" id="t-pending">0</span> pending</span>
+			</div>
+
+			<div class="t-form" id="t-form-wrap">
+				<div class="t-form-title" id="t-form-title">$ new task</div>
+				<form id="t-form">
+					<div class="t-form-group">
+						<span class="t-label">desc:</span
+						><textarea id="t-desc" placeholder="enter description..." required></textarea>
+					</div>
+					<div class="t-form-row">
+						<div class="t-form-group">
+							<span class="t-label">cat:</span
+							><select id="t-cat" required>
+								<option value="">--</option>
+								<option value="work">work</option>
+								<option value="personal">personal</option>
+								<option value="shopping">shopping</option>
+							</select>
+						</div>
+						<div class="t-form-group">
+							<span class="t-label">status:</span
+							><select id="t-status">
+								<option value="false">pending</option>
+								<option value="true">completed</option>
+							</select>
+						</div>
+					</div>
+					<button type="submit" class="t-btn-submit" id="t-submit-text">[ SUBMIT ]</button>
+					<button type="button" class="t-btn-cancel" id="t-cancel" style="display: none">[ CANCEL ]</button>
+				</form>
+			</div>
+
+			<div class="t-prompt"><span class="path">~/tasks</span> <span class="arrow">&gt;</span> ls --all</div>
+			<div class="t-controls">
+				<input type="text" class="t-search" id="t-search" placeholder="grep..." />
+				<div class="t-filter-group" id="t-filters">
+					<button class="t-filter-btn active" data-filter="all">ALL</button>
+					<button class="t-filter-btn" data-filter="completed">DONE</button>
+					<button class="t-filter-btn" data-filter="pending">TODO</button>
+				</div>
+				<div class="t-filter-group" id="t-cats">
+					<button class="t-filter-btn active" data-category="all">*</button>
+					<button class="t-filter-btn" data-category="work">WRK</button>
+					<button class="t-filter-btn" data-category="personal">PRS</button>
+					<button class="t-filter-btn" data-category="shopping">SHP</button>
+				</div>
+			</div>
+			<div id="t-list" class="t-task-list">
+				<div class="t-empty">no tasks found. run '$ new task' to create one.</div>
+			</div>
+		</div>
+
+		<!-- ================================================================
+     VIEW 3: RETRO OS
+     ================================================================ -->
+		<div id="view-retro" class="view">
+			<div class="r-window">
+				<div class="r-titlebar">
+					<div class="r-titlebar-text">
+						<div class="r-titlebar-icon">T</div>
+						TaskManager.exe
+					</div>
+					<div class="r-win-btns">
+						<div class="r-win-btn">_</div>
+						<div class="r-win-btn">&square;</div>
+						<div class="r-win-btn">X</div>
+					</div>
+				</div>
+				<div class="r-menubar">
+					<button class="r-menu-item">File</button>
+					<button class="r-menu-item">Edit</button>
+					<button class="r-menu-item">View</button>
+					<button class="r-menu-item">Help</button>
+				</div>
+				<div class="r-body">
+					<div class="r-stats">
+						<div class="r-stat-box">
+							<div class="r-stat-num" id="r-total">0</div>
+							<div class="r-stat-label">Total</div>
+						</div>
+						<div class="r-stat-box">
+							<div class="r-stat-num" id="r-done">0</div>
+							<div class="r-stat-label">Done</div>
+						</div>
+						<div class="r-stat-box">
+							<div class="r-stat-num" id="r-pending">0</div>
+							<div class="r-stat-label">Pending</div>
+						</div>
+					</div>
+					<div class="r-grid">
+						<div>
+							<div class="r-inset">
+								<div class="r-section-title" id="r-form-title">New Task</div>
+								<form id="r-form">
+									<div class="r-form-group">
+										<span class="r-label">Description:</span
+										><textarea id="r-desc" placeholder="Type here..." required></textarea>
+									</div>
+									<div class="r-form-row">
+										<div class="r-form-group">
+											<span class="r-label">Category:</span
+											><select id="r-cat" required>
+												<option value="">Select</option>
+												<option value="work">Work</option>
+												<option value="personal">Personal</option>
+												<option value="shopping">Shopping</option>
+											</select>
+										</div>
+										<div class="r-form-group">
+											<span class="r-label">Status:</span
+											><select id="r-status">
+												<option value="false">Pending</option>
+												<option value="true">Completed</option>
+											</select>
+										</div>
+									</div>
+									<button type="submit" class="r-btn" id="r-submit-text">OK</button>
+									<button type="button" class="r-btn-cancel" id="r-cancel" style="display: none">Cancel</button>
+								</form>
+							</div>
+						</div>
+						<div>
+							<div class="r-controls">
+								<input type="text" class="r-search" id="r-search" placeholder="Find..." />
+								<div class="r-filter-group" id="r-filters">
+									<button class="r-filter-btn active" data-filter="all">All</button>
+									<button class="r-filter-btn" data-filter="completed">Done</button>
+									<button class="r-filter-btn" data-filter="pending">Pending</button>
+								</div>
+								<div class="r-filter-group" id="r-cats">
+									<button class="r-filter-btn active" data-category="all">All</button>
+									<button class="r-filter-btn" data-category="work">Work</button>
+									<button class="r-filter-btn" data-category="personal">Prsnl</button>
+									<button class="r-filter-btn" data-category="shopping">Shop</button>
+								</div>
+							</div>
+							<div id="r-list" class="r-task-list">
+								<div class="r-empty">No items. Add a new task.</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="r-statusbar">
+					<div class="r-status-cell" id="r-status-msg">Ready</div>
+					<div class="r-status-cell" style="flex: 0 0 auto" id="r-status-date"></div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			// ================================================================
+			// SHARED API LAYER — identical for all views
+			// ================================================================
+			// Enter your base API URL here without the trailing slash, if you're using codespaces,
+			// use the public URL from the deployment and make sure to set the port to public and
+			// back to private once you're done.
+			const API_BASE = "http://localhost:8000";
+			let allTasks = [];
+
+			async function apiGetTasks() {
+				const r = await fetch(`${API_BASE}/tasks`);
+				if (!r.ok) throw new Error("Failed to load");
+				return r.json();
+			}
+
+			async function apiCreateTask(data) {
+				const r = await fetch(`${API_BASE}/tasks`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(data),
+				});
+				if (!r.ok) throw new Error("Failed to create");
+				return r.json();
+			}
+
+			async function apiUpdateTask(id, data) {
+				const r = await fetch(`${API_BASE}/tasks/${id}`, {
+					method: "PUT",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(data),
+				});
+				if (!r.ok) throw new Error("Failed to update");
+				return r.json();
+			}
+
+			async function apiDeleteTask(id) {
+				const r = await fetch(`${API_BASE}/tasks/${id}`, { method: "DELETE" });
+				if (!r.ok) throw new Error("Failed to delete");
+			}
+
+			function escapeHtml(t) {
+				const d = document.createElement("div");
+				d.textContent = t;
+				return d.innerHTML;
+			}
+
+			// ================================================================
+			// VIEW ENGINE — each view registers its render functions
+			// ================================================================
+			let activeView = "minimal";
+			const views = {};
+
+			function registerView(name, obj) {
+				views[name] = obj;
+			}
+
+			function switchView(name) {
+				activeView = name;
+				document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
+				document.getElementById(`view-${name}`).classList.add("active");
+				document.querySelectorAll(".view-tab").forEach((t) => t.classList.remove("active"));
+				document.querySelector(`.view-tab[data-view="${name}"]`).classList.add("active");
+				document.body.className = `theme-${name}`;
+				views[name].render(allTasks);
+			}
+
+			async function loadAll() {
+				Object.values(views).forEach((v) => v.showLoading());
+				try {
+					allTasks = await apiGetTasks();
+				} catch (e) {
+					showToast("Failed to load tasks", "error");
+				}
+				views[activeView].render(allTasks);
+			}
+
+			function showToast(msg, type = "info") {
+				const t = document.createElement("div");
+				t.className = `g-toast ${type}`;
+				t.textContent = msg;
+				document.body.appendChild(t);
+				setTimeout(() => {
+					t.style.opacity = "0";
+					t.style.transform = "translateY(8px)";
+					t.style.transition = "all 0.2s ease";
+					setTimeout(() => t.remove(), 200);
+				}, 2500);
+			}
+
+			// ================================================================
+			// VIEW CONTROLLER FACTORY — DRY setup for each view
+			// ================================================================
+			function createViewController(prefix, renderFn, loadingHtml, emptyHtml) {
+				const els = {
+					form: document.getElementById(`${prefix}-form`),
+					desc: document.getElementById(`${prefix}-desc`),
+					cat: document.getElementById(`${prefix}-cat`),
+					status: document.getElementById(`${prefix}-status`),
+					list: document.getElementById(`${prefix}-list`),
+					search: document.getElementById(`${prefix}-search`),
+					submitText: document.getElementById(`${prefix}-submit-text`),
+					cancel: document.getElementById(`${prefix}-cancel`),
+					formTitle: document.getElementById(`${prefix}-form-title`),
+					filterCont: document.getElementById(`${prefix}-filters`),
+					catCont: document.getElementById(`${prefix}-cats`),
+				};
+
+				let editId = null;
+				let filter = "all";
+				let category = "all";
+				let search = "";
+
+				function getFiltered() {
+					let tasks = [...allTasks];
+					if (search) tasks = tasks.filter((t) => t.description.toLowerCase().includes(search.toLowerCase()));
+					if (filter === "completed") tasks = tasks.filter((t) => t.completed);
+					else if (filter === "pending") tasks = tasks.filter((t) => !t.completed);
+					if (category !== "all") tasks = tasks.filter((t) => t.category === category);
+					return tasks;
+				}
+
+				function render() {
+					const filtered = getFiltered();
+					updateStats(prefix);
+					if (filtered.length === 0) {
+						els.list.innerHTML = emptyHtml;
+						return;
+					}
+					els.list.innerHTML = renderFn(filtered);
+				}
+
+				function showLoading() {
+					els.list.innerHTML = loadingHtml;
+				}
+
+				// Form submit
+				els.form.addEventListener("submit", async (e) => {
+					e.preventDefault();
+					const desc = els.desc.value.trim();
+					const cat = els.cat.value;
+					const completed = els.status.value === "true";
+					if (!desc) {
+						showToast("Enter a description", "error");
+						return;
+					}
+
+					try {
+						if (editId) {
+							await apiUpdateTask(editId, { id: editId, description: desc, category: cat, completed });
+							showToast("Task updated", "success");
+						} else {
+							await apiCreateTask({ description: desc, category: cat, completed });
+							showToast("Task added", "success");
+						}
+						clearForm();
+						await loadAll();
+					} catch (err) {
+						showToast("Failed to save", "error");
+					}
+				});
+
+				function clearForm() {
+					els.form.reset();
+					editId = null;
+					els.cat.value = "";
+					els.status.value = "false";
+					els.cancel.style.display = "none";
+					if (prefix === "m") {
+						els.submitText.textContent = "Add Task";
+						els.formTitle.textContent = "New Task";
+					} else if (prefix === "t") {
+						els.submitText.textContent = "[ SUBMIT ]";
+						els.formTitle.textContent = "$ new task";
+					} else {
+						els.submitText.textContent = "OK";
+						els.formTitle.textContent = "New Task";
+					}
+				}
+
+				els.cancel.addEventListener("click", clearForm);
+
+				// Search
+				els.search.addEventListener("input", (e) => {
+					search = e.target.value;
+					render();
+				});
+
+				// Filters
+				els.filterCont.querySelectorAll("[data-filter]").forEach((btn) => {
+					btn.addEventListener("click", () => {
+						els.filterCont.querySelectorAll("[data-filter]").forEach((b) => b.classList.remove("active"));
+						btn.classList.add("active");
+						filter = btn.dataset.filter;
+						render();
+					});
+				});
+
+				els.catCont.querySelectorAll("[data-category]").forEach((btn) => {
+					btn.addEventListener("click", () => {
+						els.catCont.querySelectorAll("[data-category]").forEach((b) => b.classList.remove("active"));
+						btn.classList.add("active");
+						category = btn.dataset.category;
+						render();
+					});
+				});
+
+				// Expose edit for global onclick
+				window[`edit_${prefix}`] = function (id) {
+					const task = allTasks.find((t) => t.id === id);
+					if (!task) return;
+					editId = id;
+					els.desc.value = task.description;
+					els.cat.value = task.category;
+					els.status.value = task.completed;
+					els.cancel.style.display = prefix === "m" ? "block" : prefix === "t" ? "block" : "block";
+					if (prefix === "m") {
+						els.submitText.textContent = "Update Task";
+						els.formTitle.textContent = "Edit Task";
+					} else if (prefix === "t") {
+						els.submitText.textContent = "[ UPDATE ]";
+						els.formTitle.textContent = "$ edit task";
+					} else {
+						els.submitText.textContent = "Update";
+						els.formTitle.textContent = "Edit Task";
+					}
+					els.desc.focus();
+					window.scrollTo({ top: 0, behavior: "smooth" });
+				};
+
+				window[`del_${prefix}`] = async function (id) {
+					if (!confirm("Delete this task?")) return;
+					try {
+						await apiDeleteTask(id);
+						showToast("Task deleted", "success");
+						await loadAll();
+					} catch (err) {
+						showToast("Failed to delete", "error");
+					}
+				};
+
+				window[`toggle_${prefix}`] = async function (id) {
+					const task = allTasks.find((t) => t.id === id);
+					if (!task) return;
+					try {
+						await apiUpdateTask(id, { ...task, completed: !task.completed });
+						showToast(task.completed ? "Marked pending" : "Marked done", "success");
+						await loadAll();
+					} catch (err) {
+						showToast("Failed to update", "error");
+					}
+				};
+
+				return { render, showLoading };
+			}
+
+			// ================================================================
+			// STATS UPDATER
+			// ================================================================
+			function updateStats(prefix) {
+				const total = allTasks.length;
+				const done = allTasks.filter((t) => t.completed).length;
+				const pend = total - done;
+				const $ = (id) => document.getElementById(id);
+				$(`${prefix}-total`).textContent = total;
+				$(`${prefix}-done`).textContent = done;
+				$(`${prefix}-pending`).textContent = pend;
+			}
+
+			// ================================================================
+			// REGISTER VIEW 1: MINIMAL
+			// ================================================================
+			const minimalCtrl = createViewController(
+				"m",
+				(tasks) =>
+					tasks
+						.map(
+							(t) => `
+		<div class="v-task-item cat-${t.category} ${t.completed ? "completed" : ""}">
+			<input type="checkbox" class="v-checkbox" ${t.completed ? "checked" : ""} onchange="toggle_m(${t.id})">
+			<div class="v-task-content">
+				<div class="v-task-desc">${escapeHtml(t.description)}</div>
+				<div><span class="v-tag v-tag-${t.category}">${t.category}</span></div>
+			</div>
+			<div class="v-task-actions">
+				<button class="v-act-btn" onclick="edit_m(${t.id})" title="Edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+				<button class="v-act-btn del" onclick="del_m(${t.id})" title="Delete"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6z"/></svg></button>
+			</div>
+		</div>`,
+						)
+						.join(""),
+				`<div class="v-loading"><span class="g-spinner"></span> Loading...</div>`,
+				`<div class="v-empty"><div class="v-empty-title">No tasks found</div><p>Adjust filters or create a task</p></div>`,
+			);
+			registerView("minimal", minimalCtrl);
+
+			// Set dateline
+			document.getElementById("m-dateline").textContent = new Date().toLocaleDateString("en-US", {
+				weekday: "long",
+				year: "numeric",
+				month: "long",
+				day: "numeric",
+			});
+
+			// ================================================================
+			// REGISTER VIEW 2: TERMINAL
+			// ================================================================
+			const terminalCtrl = createViewController(
+				"t",
+				(tasks) =>
+					tasks
+						.map(
+							(t) => `
+		<div class="t-task-item ${t.completed ? "completed" : ""}">
+			<input type="checkbox" class="t-checkbox" ${t.completed ? "checked" : ""} onchange="toggle_t(${t.id})">
+			<div class="t-task-content">
+				<div class="t-task-desc">${t.completed ? "[x]" : "[ ]"} ${escapeHtml(t.description)}</div>
+				<div class="t-task-cat t-cat-${t.category}">[${t.category}]</div>
+			</div>
+			<div class="t-task-actions">
+				<button class="t-act-btn" onclick="edit_t(${t.id})">edit</button>
+				<button class="t-act-btn del" onclick="del_t(${t.id})">rm</button>
+			</div>
+		</div>`,
+						)
+						.join(""),
+				`<div class="t-loading"><span class="g-spinner"></span> loading...</div>`,
+				`<div class="t-empty">no results. try different filters.</div>`,
+			);
+			registerView("terminal", terminalCtrl);
+
+			// ================================================================
+			// REGISTER VIEW 3: RETRO OS
+			// ================================================================
+			const retroCtrl = createViewController(
+				"r",
+				(tasks) =>
+					tasks
+						.map(
+							(t) => `
+		<div class="r-task-item ${t.completed ? "completed" : ""}">
+			<input type="checkbox" class="r-checkbox" ${t.completed ? "checked" : ""} onchange="toggle_r(${t.id})">
+			<div class="r-task-content">
+				<div class="r-task-desc">${escapeHtml(t.description)}</div>
+				<div class="r-task-cat">${t.category}</div>
+			</div>
+			<div class="r-task-actions">
+				<button class="r-act-btn" onclick="edit_r(${t.id})">Edit</button>
+				<button class="r-act-btn" onclick="del_r(${t.id})">Del</button>
+			</div>
+		</div>`,
+						)
+						.join(""),
+				`<div class="r-loading"><span class="g-spinner"></span> Loading...</div>`,
+				`<div class="r-empty">No items found.</div>`,
+			);
+			registerView("retro", retroCtrl);
+
+			document.getElementById("r-status-date").textContent = new Date().toLocaleDateString();
+
+			// ================================================================
+			// INIT
+			// ================================================================
+			document.querySelectorAll(".view-tab").forEach((tab) => {
+				tab.addEventListener("click", () => switchView(tab.dataset.view));
+			});
+
+			document.addEventListener("DOMContentLoaded", loadAll);
+		</script>
+	</body>
+</html>
